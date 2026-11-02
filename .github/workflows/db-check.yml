@@ -1,0 +1,36 @@
+name: DB check
+
+on: push
+
+env:
+  DB_HOST: localhost
+  DB_PORT: 5432
+  DB_NAME: tp
+  DB_USER: postgres
+  DB_PASSWORD: postgres
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Démarrer PostgreSQL
+        run: sudo systemctl start postgresql.service
+      - name: Attendre que PostgreSQL soit prêt
+        run: |
+          for i in $(seq 1 15); do
+            pg_isready -h localhost -p 5432 && exit 0
+            sleep 1
+          done
+          echo "PostgreSQL n'a pas démarré"
+          exit 1
+      - name: Créer l'utilisateur et la base
+        run: |
+          sudo -u postgres psql -c "ALTER USER postgres PASSWORD '$DB_PASSWORD';"
+          sudo -u postgres createdb "$DB_NAME"
+      - name: Appliquer les migrations
+        run: bash db/apply.sh
+      - name: Afficher le schéma
+        run: |
+          PGPASSWORD="$DB_PASSWORD" psql -h "$DB_HOST" -U "$DB_USER" \
+            -d "$DB_NAME" -c '\d students'
