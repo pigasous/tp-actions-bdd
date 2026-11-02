@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Démarrer PostgreSQL
+      - name: Démarrer PostgreSQL Normal
         run: sudo systemctl start postgresql.service
       - name: Attendre que PostgreSQL soit prêt
         run: |
